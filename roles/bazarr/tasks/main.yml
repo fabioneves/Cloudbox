@@ -1,8 +1,8 @@
 #########################################################################
-# Title:         Cloudbox: Sonarr Role                                  #
-# Author(s):     L3uddz                                                 #
+# Title:         Cloudbox: Bazarr Role                                  #
+# Author(s):     fneves                                                 #
 # URL:           https://github.com/cloudbox/cloudbox                   #
-# Docker Image:  hotio/suitarr                                          #
+# Docker Image:  morpheus65535/bazarr                                   #
 # --                                                                    #
 #         Part of the Cloudbox project: https://cloudbox.rocks          #
 #########################################################################
@@ -13,7 +13,7 @@
   include_role:
     name: cloudflare
   vars:
-    subdomain: sonarr
+    subdomain: bazarr
 
 - name: "Get {{user}} uid"
   shell: "id -u {{user}}"
@@ -25,43 +25,41 @@
 
 - name: Stop and remove any existing container
   docker_container:
-    name: sonarr
+    name: bazarr
     state: absent
 
-- name: Create sonarr directories
+- name: Create bazarr directories
   file: "path={{item}} state=directory mode=0775 owner={{user}} group={{user}}"
   with_items:
-    - /opt/sonarr
+    - /opt/bazarr
 
 - name: Create and start container
   docker_container:
-    name: sonarr
-    image: "hotio/suitarr"
+    name: bazarr
+    image: "morpheus65535/bazarr"
     pull: yes
     published_ports:
-      - "127.0.0.1:8989:8989"
+      - "127.0.0.1:6767:6767"
     env:
-      APP: "sonarr"
-      VERSION: "unstable"
+      APP: "bazarr"
+      VERSION: "latest"
       BACKUP: "no"
       PUID: "{{uid.stdout}}"
       PGID: "{{gid.stdout}}"
       MONO_TLS_PROVIDER: legacy
-      VIRTUAL_HOST: "sonarr.{{domain}}"
-      VIRTUAL_PORT: 8989
-      LETSENCRYPT_HOST: "sonarr.{{domain}}"
+      VIRTUAL_HOST: "bazarr.{{domain}}"
+      VIRTUAL_PORT: 6767
+      LETSENCRYPT_HOST: "bazarr.{{domain}}"
       LETSENCRYPT_EMAIL: "{{email}}"
     volumes:
       - "/etc/localtime:/etc/localtime:ro"
-      - "/opt/sonarr:/config"
-      - "/mnt/plexdrive/TV:/tv"
-      - "{{nzbget.downloads}}:/downloads/nzbget"
-      - "{{rutorrent.downloads}}:/downloads/rutorrent"
+      - "/opt/bazarr:/bazarr/data"
+      - "/mnt/plexdrive/TVShows:/tv"
+      - "/mnt/plexdrive/Movies:/movies"
       - "/mnt:/mnt"
-      - "/opt/scripts:/scripts"
     networks:
       - name: cloudbox
         aliases:
-          - sonarr
+          - bazarr
     restart_policy: always
     state: started
