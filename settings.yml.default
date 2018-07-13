@@ -1,9 +1,4 @@
 ---
-user: seed
-passwd: password123
-domain: testcloudbox.ml
-email: your@email.com
-cloudflare_api_token:
 nzbget:
   downloads: /mnt/local/downloads/nzbget
 rutorrent:
@@ -22,5 +17,3 @@ backup:
   use_rclone: false
   cron_time: weekly
   cron_state: absent
-  pushover_app_token:
-  pushover_user_key:

@@ -1,6 +1,7 @@
 ---
 - hosts: localhost
   vars_files:
+    - ['accounts.yml', 'accounts.yml.default']
     - ['settings.yml', 'settings.yml.default']
     - ['adv_settings.yml', 'adv_settings.yml.default']
   roles:
@@ -11,12 +12,13 @@
     - { role: backup, tags: ['backup'] }
     - { role: restore, tags: ['restore'] }
     - { role: pre_install, tags: ['core', 'cloudbox', 'mediabox', 'feederbox'] }
-    - { role: system, tags: ['core', 'cloudbox', 'mediabox', 'feederbox'] }
+    - { role: user, tags: ['always'] }
+    - { role: system, tags: ['core', 'cloudbox', 'mediabox', 'feederbox', 'system'] }
     - { role: motd, tags: ['core', 'cloudbox', 'mediabox', 'feederbox', 'motd'] }
-    - { role: common, tags: ['core', 'cloudbox', 'mediabox', 'feederbox'] }
-    - { role: unionfs, tags: ['core', 'cloudbox', 'mediabox', 'feederbox'] }
-    - { role: docker, tags: ['core', 'cloudbox', 'mediabox', 'feederbox'] }
+    - { role: common, tags: ['core', 'cloudbox', 'mediabox', 'feederbox', 'common'] }
+    - { role: docker, tags: ['core', 'cloudbox', 'mediabox', 'feederbox', 'docker'] }
     - { role: plexdrive, tags: ['core', 'cloudbox', 'mediabox', 'feederbox'] }
+    - { role: unionfs, tags: ['core', 'cloudbox', 'mediabox', 'feederbox'] }
     - { role: rclone, tags: ['core', 'cloudbox', 'mediabox', 'feederbox', 'rclone'] }
     - { role: scripts, tags: ['core', 'cloudbox', 'mediabox', 'feederbox', 'scripts'] }
     - { role: nginx-proxy, tags: ['core', 'cloudbox', 'mediabox', 'feederbox', 'nginx-proxy'] }
@@ -43,9 +45,9 @@
     - { role: lidarr, tags: ['lidarr'] }
     - { role: emby, tags: ['emby'] }
     - { role: nzbhydra, tags: ['nzbhydra'] }
-    - { role: zsh, tags: ['zsh'] }
     - { role: traktarr, tags: ['traktarr'] }
     - { role: plex_dupefinder, tags: ['plex_dupefinder'] }
+    - { role: sonarr4k, tags: ['sonarr4k'] }
     - { role: radarr4k, tags: ['radarr4k'] }
     - { role: heimdall, tags: ['heimdall'] }
     - { role: thelounge, tags: ['thelounge'] }
@@ -54,3 +56,6 @@
     - { role: quassel, tags: ['quassel'] }
     - { role: plex_patrol, tags: ['plex_patrol'] }
     - { role: telly, tags: ['telly'] }
+    - { role: nowshowing, tags: ['nowshowing'] }
+    - { role: bazarr, tags: ['bazarr'] }
+    - { role: plexlibrary, tags: ['plexlibrary'] }

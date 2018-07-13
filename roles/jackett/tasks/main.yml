@@ -1,6 +1,6 @@
 #########################################################################
 # Title:         Cloudbox: Jackett Role                                 #
-# Author(s):     L3uddz                                                 #
+# Author(s):     L3uddz, Desimaniac                                     #
 # URL:           https://github.com/cloudbox/cloudbox                   #
 # Docker Image:  hotio/suitarr                                          #
 # --                                                                    #
@@ -15,14 +15,6 @@
   vars:
     subdomain: jackett
 
-- name: "Get {{user}} uid"
-  shell: "id -u {{user}}"
-  register: uid
-
-- name: "Get {{user}} gid"
-  shell: "id -g {{user}}"
-  register: gid
-
 - name: Stop and remove any existing container
   docker_container:
     name: jackett
@@ -33,19 +25,43 @@
   with_items:
     - /opt/jackett
 
+- name: Check subfolder1 exists
+  stat:
+    path: /opt/jackett/Jackett
+  register: subfolder1
+
+- name: Check subfolder2 exists
+  stat:
+    path: /opt/jackett/app
+  register: subfolder2
+
+- name: Move 'jackett' folder contents to 'app' subfolder
+  shell: |
+    mv /opt/jackett /tmp/app
+    mkdir /opt/jackett
+    mv /tmp/app /opt/jackett/
+    find /opt/jackett/* -type d -empty -delete
+    chown -R {{user}}:{{user}} /opt/jackett
+  when: not (subfolder1.stat.exists or subfolder2.stat.exists)
+
+- name: Move 'Jackett' subfolder to 'app' subfolder
+  shell: |
+    mv /opt/jackett/Jackett /opt/jackett/app
+    chown -R {{user}}:{{user}} /opt/jackett
+  when: (subfolder1.stat.exists) and (not subfolder2.stat.exists)
+
 - name: Create and start container
   docker_container:
     name: jackett
-    image: hotio/suitarr
+    image: hotio/suitarr:jackett
     pull: yes
     published_ports:
       - "127.0.0.1:9117:9117"
     env:
-      APP: "jackett"
       VERSION: "unstable"
       BACKUP: "no"
-      PUID: "{{uid.stdout}}"
-      PGID: "{{gid.stdout}}"
+      PUID: "{{uid}}"
+      PGID: "{{gid}}"
       VIRTUAL_HOST: "jackett.{{domain}}"
       VIRTUAL_PORT: 9117
       LETSENCRYPT_HOST: "jackett.{{domain}}"

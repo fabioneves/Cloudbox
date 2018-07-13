@@ -12,6 +12,23 @@
     },
     "notifications": {
     },
+    "plex": {
+        "enabled": false,
+        "url": "https://plex.{{domain}}",
+        "token": "",
+        "poll_interval": 60,
+        "max_streams_before_throttle": 1,
+        "rclone": {
+            "throttle_speeds": {
+                "1": "50M",
+                "2": "40M",
+                "3": "30M",
+                "4": "20M",
+                "5": "10M"
+            },
+            "url": "http://localhost:7949"
+        }
+    },
     "remotes": {
         "google": {
             "hidden_remote": "google:",
@@ -19,7 +36,8 @@
                 "**partial~",
                 "**_HIDDEN~",
                 ".unionfs/**",
-                ".unionfs-fuse/**"
+                ".unionfs-fuse/**",
+                "**.fuse_hidden**"
             ],
             "rclone_extras": {
                 "--checkers": 16,

@@ -15,14 +15,6 @@
   vars:
     subdomain: nzbhydra
 
-- name: "Get {{user}} uid"
-  shell: "id -u {{user}}"
-  register: uid
-
-- name: "Get {{user}} gid"
-  shell: "id -g {{user}}"
-  register: gid
-
 - name: Stop and remove any existing container
   docker_container:
     name: nzbhydra
@@ -65,8 +57,8 @@
     published_ports:
       - "127.0.0.1:5075:5075"
     env:
-      PUID: "{{uid.stdout}}"
-      PGID: "{{gid.stdout}}"
+      PUID: "{{uid}}"
+      PGID: "{{gid}}"
       VIRTUAL_HOST: "nzbhydra.{{domain}}"
       VIRTUAL_PORT: 5075
       LETSENCRYPT_HOST: "nzbhydra.{{domain}}"
@@ -74,9 +66,9 @@
     volumes:
       - "/etc/localtime:/etc/localtime:ro"
       - "/opt/nzbhydra:/config"
-    restart_policy: always
     networks:
       - name: cloudbox
         aliases:
           - nzbhydra
+    restart_policy: always
     state: started

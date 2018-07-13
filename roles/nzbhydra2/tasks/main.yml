@@ -15,14 +15,6 @@
   vars:
     subdomain: nzbhydra2
 
-- name: "Get {{user}} uid"
-  shell: "id -u {{user}}"
-  register: uid
-
-- name: "Get {{user}} gid"
-  shell: "id -g {{user}}"
-  register: gid
-
 - name: Stop and remove any existing container
   docker_container:
     name: nzbhydra2
@@ -33,24 +25,48 @@
   with_items:
     - /opt/nzbhydra2
 
+- name: Check subfolder1 exists
+  stat:
+    path: /opt/nzbhydra2/NZBHydra2
+  register: subfolder1
+
+- name: Check subfolder2 exists
+  stat:
+    path: /opt/nzbhydra2/app
+  register: subfolder2
+
+- name: Move 'nzbhydra2' folder contents to 'app' subfolder
+  shell: |
+    mv /opt/nzbhydra2 /tmp/app
+    mkdir /opt/nzbhydra2
+    mv /tmp/app /opt/nzbhydra2/
+    find /opt/nzbhydra2/* -type d -empty -delete
+    chown -R {{user}}:{{user}} /opt/nzbhydra2
+  when: not (subfolder1.stat.exists or subfolder2.stat.exists)
+
+- name: Move 'NZBHydra2' subfolder to 'app' subfolder
+  shell: |
+    mv /opt/nzbhydra2/NZBHydra2 /opt/nzbhydra2/app
+    chown -R {{user}}:{{user}} /opt/nzbhydra2
+  when: (subfolder1.stat.exists) and (not subfolder2.stat.exists)
+
 - name: Check if nzbhydra.yml exists
   stat:
-    path: "/opt/nzbhydra2/nzbhydra.yml"
+    path: "/opt/nzbhydra2/app/nzbhydra.yml"
   register: nzbhydra2_yml
 
 - name: Create and start container
   docker_container:
     name: nzbhydra2
-    image: hotio/suitarr
+    image: hotio/suitarr:nzbhydra2
     pull: yes
     published_ports:
       - "127.0.0.1:5076:5076"
     env:
-      APP: "nzbhydra2"
       VERSION: "unstable"
       BACKUP: "no"
-      PUID: "{{uid.stdout}}"
-      PGID: "{{gid.stdout}}"
+      PUID: "{{uid}}"
+      PGID: "{{gid}}"
       VIRTUAL_HOST: "nzbhydra2.{{domain}}"
       VIRTUAL_PORT: 5076
       LETSENCRYPT_HOST: "nzbhydra2.{{domain}}"
@@ -66,100 +82,10 @@
           - nzbhydra2
     state: started
 
-- name: Wait for nzbhydra.yml to be created
-  wait_for:
-    path: "/opt/nzbhydra2/nzbhydra.yml"
-    state: present
-  when: not nzbhydra2_yml.stat.exists
-
-- name: "Wait for 10 seconds before stopping nzbhydra2 container"
-  wait_for:
-    timeout: 10
-  when: not nzbhydra2_yml.stat.exists
-
-- name: Stop container to customize nzbhydra.yml
-  docker_container:
-    name: nzbhydra2
-    image: hotio/suitarr
-    state: stopped
-  when: not nzbhydra2_yml.stat.exists
-
-- name: Update auth settings
-  lineinfile:
-    path: "/opt/nzbhydra2/nzbhydra.yml"
-    regexp: "{{ item.regexp }}"
-    line: "{{ item.line }}"
-    state: present
-    backrefs: yes
-  with_items:
-    - {regexp: '(authType:)\s".*?"', line: '  \1 "FORM"'}
-    - {regexp: '(restrictAdmin:)\s.*', line: '  \1 true'}
-    - {regexp: '(restrictDetailsDl:)\s.*', line: '  \1 true'}
-    - {regexp: '(restrictIndexerSelection:)\s.*', line: '  \1 true'}
-    - {regexp: '(restrictSearch:)\s.*', line: '  \1 true'}
-    - {regexp: '(restrictStats:)\s.*', line: '  \1 true'}
-    - {regexp: '(users:)\s?.*', line: '  \1'}
-  when: not nzbhydra2_yml.stat.exists
-
-- name: Add login settings
-  lineinfile:
-    path: "/opt/nzbhydra2/nzbhydra.yml"
-    insertafter: 'users:'
-    line: "{{ item.line }}"
-    state: present
-  with_items:
-    - {line: '    password: "{{passwd}}"'}
-    - {line: '    username: "{{user}}"'}
-    - {line: '    showIndexerSelection: true'}
-    - {line: '    maySeeStats: true'}
-    - {line: '    maySeeDetailsDl: true'}
-    - {line: '  - maySeeAdmin: true'}
-  when: not nzbhydra2_yml.stat.exists
-
-- name: Increase JVM memory
-  lineinfile:
-    path: "/opt/nzbhydra2/nzbhydra.yml"
-    regexp: "{{ item.regexp }}"
-    line: "{{ item.line }}"
-    state: present
-    backrefs: yes
-  with_items:
-    - {regexp: '(xmx:)\s?.*', line: '  \1 512'}
-  when: (not nzbhydra2_yml.stat.exists) and ((ansible_memory_mb.real.total/1024)|round(0,'ceil')|int >= 16)
-
-- name: Add downloaders section
-  lineinfile:
-    path: "/opt/nzbhydra2/nzbhydra.yml"
-    regexp: "{{ item.regexp }}"
-    line: "{{ item.line }}"
-    state: present
-    backrefs: yes
-  with_items:
-    - {regexp: '(downloaders:)\s?.*', line: '  \1'}
-  when: not nzbhydra2_yml.stat.exists
-
-- name: Add NZBGet downloader
-  lineinfile:
-    path: "/opt/nzbhydra2/nzbhydra.yml"
-    insertafter: 'downloaders:'
-    line: "{{ item.line }}"
-    state: present
-  with_items:
-    - {line: '    password: "{{passwd}}"'}
-    - {line: '    username: "{{user}}"'}
-    - {line: '    url: "http://nzbget:6789"'}
-    - {line: '    downloaderType: "NZBGET"'}
-    - {line: '    nzbAddingType: "UPLOAD"'}
-    - {line: '    name: "NZBGet"'}
-    - {line: '    iconCssClass: ""'}
-    - {line: '    enabled: true'}
-    - {line: '    downloadType: "NZB"'}
-    - {line: '    defaultCategory: null'}
-    - {line: '  - apiKey: null'}
-  when: not nzbhydra2_yml.stat.exists
-
-- name: Start container to apply changes
-  docker_container:
-    name: nzbhydra2
-    state: started
-  when: not nzbhydra2_yml.stat.exists
+- name: Settings Tweaks
+  include_tasks: "nzbhydra2_settings.yml"
+  when: not (
+        (nzbhydra2_yml.stat.exists)
+        or
+        ((continuous_integration|default(false,true))|bool)
+    )

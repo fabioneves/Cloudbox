@@ -1,6 +1,6 @@
 #########################################################################
 # Title:         Cloudbox: Heimdall Role                                #
-# Author(s):     Captain-NaCl                                           #
+# Author(s):     Captain-NaCl, Desimaniac                               #
 # URL:           https://github.com/cloudbox/cloudbox                   #
 # Docker Image:  linuxserver/heimdall                                   #
 # --                                                                    #
@@ -15,13 +15,16 @@
   vars:
     subdomain: heimdall
 
-- name: "Get {{user}} uid"
-  shell: "id -u {{user}}"
-  register: uid
-
-- name: "Get {{user}} gid"
-  shell: "id -g {{user}}"
-  register: gid
+- name: Create htpasswd
+  htpasswd:
+    path: "/opt/nginx-proxy/htpasswd/{{item}}.{{domain}}"
+    name: "{{user}}"
+    password: "{{passwd}}"
+    owner: "{{user}}"
+    group: "{{user}}"
+    mode: 0664
+  with_items:
+    - heimdall
 
 - name: Stop and remove any existing container
   docker_container:
@@ -41,8 +44,8 @@
     published_ports:
       - "127.0.0.1:8078:80"
     env:
-      PUID: "{{uid.stdout}}"
-      PGID: "{{gid.stdout}}"
+      PUID: "{{uid}}"
+      PGID: "{{gid}}"
       VIRTUAL_HOST: "heimdall.{{domain}}"
       VIRTUAL_PORT: 80
       LETSENCRYPT_HOST: "heimdall.{{domain}}"
