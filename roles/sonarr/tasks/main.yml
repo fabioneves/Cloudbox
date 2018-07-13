@@ -70,7 +70,7 @@
     volumes:
       - "/etc/localtime:/etc/localtime:ro"
       - "/opt/sonarr:/config"
-      - "/mnt/plexdrive/TV:/tv"
+      - "/mnt/rclone/TVShows:/tv"
       - "{{nzbget.downloads}}:/downloads/nzbget"
       - "{{rutorrent.downloads}}:/downloads/rutorrent"
       - "/mnt:/mnt"

@@ -70,7 +70,7 @@
     volumes:
       - "/etc/localtime:/etc/localtime:ro"
       - "/opt/radarr:/config"
-      - "/mnt/plexdrive/Movies:/movies"
+      - "/mnt/rclone/Movies:/movies"
       - "{{nzbget.downloads}}:/downloads/nzbget"
       - "{{rutorrent.downloads}}:/downloads/rutorrent"
       - "/mnt:/mnt"
