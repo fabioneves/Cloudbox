@@ -17,14 +17,6 @@
   shell: 'docker stop {{docker_running_containers.stdout}}'
   ignore_errors: yes
 
-- name: Stop unionfs service
-  systemd: state=stopped name=unionfs
-  ignore_errors: yes
-
-- name: "Force unmount /mnt/unionfs"
-  shell: "/bin/umount -f /mnt/unionfs"
-  ignore_errors: yes
-
 - name: Check if previous feeder.service exists in /etc/systemd/system/
   stat:
     path: "/etc/systemd/system/feeder.service"
@@ -41,8 +33,8 @@
   ignore_errors: yes
   when: (previous_systemd_feeder_service.stat.exists) and (previous_feeder_status is success)
 
-- name: "Force unmount of previous /mnt/feeder"
-  shell: "/bin/umount -f /mnt/feeder"
+- name: "Force unmount of previous /mnt/rclone"
+  shell: "/bin/umount -f /mnt/rclone"
   ignore_errors: yes
   when: (previous_systemd_feeder_service.stat.exists) and (previous_feeder_status is success)
 
@@ -84,42 +76,29 @@
     force: yes
   when: not systemd_feeder_service.stat.exists
 
-- name: Import updated unionfs.service to /etc/systemd/system/
-  template:
-    src: unionfs.service.js2
-    dest: /etc/systemd/system/unionfs.service
-    force: yes
-
 - name: Systemd daemon-reload
   systemd: state=stopped name=feeder daemon_reload=yes enabled=no
 
-- name: Check if /mnt/feeder path exists
+- name: Check if /mnt/rclone path exists
   stat:
-    path: /mnt/feeder
+    path: /mnt/rclone
   register: mnt_feeder_path
 
-- name: Clean /mnt/feeder path
-  shell: "/bin/rm -rf /mnt/feeder/*"
+- name: Clean /mnt/rclone path
+  shell: "/bin/rm -rf /mnt/rclone/*"
   when: mnt_feeder_path.stat.exists
   ignore_errors: yes
   args:
     warn: no
 
-- name: Create /mnt/feeder path
+- name: Create /mnt/rclone path
   file: "path={{item}} state=directory mode=0775 owner={{user}} group={{user}} recurse=yes"
   with_items:
-    - /mnt/feeder
+    - /mnt/rclone
   when: not mnt_feeder_path.stat.exists
 
 - name: Start feeder service
   systemd: state=started name=feeder enabled=yes
-
-- name: "Wait for 5 seconds before starting unionfs service"
-  wait_for:
-    timeout: 5
-
-- name: Start unionfs service
-  systemd: state=started name=unionfs enabled=yes
 
 - name: "Wait for 5 seconds before starting docker containers"
   wait_for:

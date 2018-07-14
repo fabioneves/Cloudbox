@@ -1,13 +1,14 @@
 ---
 nzbget:
-  downloads: /mnt/local/downloads/nzbget
+  downloads: /storage/downloads/nzbget
 rutorrent:
-  downloads: /mnt/local/downloads/rutorrent
+  downloads: /storage/downloads/rutorrent
 plex:
   tag: public
   transcodes: /home/{{user}}/transcodes
 rclone:
   version: latest
+  upload_tmp_path: /storage/upload-tmp
 backup:
   tar_dest: /home/{{user}}/Backups
   rsync_dest: rsync://somehost.com/Backups
