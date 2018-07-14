@@ -26,8 +26,10 @@ ExecStart=/usr/bin/rclone mount gcache: /mnt/rclone \
    --buffer-size=0M \
    --log-file=/home/{{user}}/rclone.log \
    --log-level INFO \
-   --cache-tmp-upload-path={{ rclone.upload_tmp_path }}  \
-   --cache-tmp-wait-time=5m
+   --cache-tmp-wait-time=5m \
+   --cache-tmp-upload-path={{rclone.upload_tmp_path}} \
+   --cache-chunk-path={{rclone.cache_backend}} \
+   --cache-db-path={{rclone.cache_backend}}
 ExecStop=/bin/fusermount -uz /mnt/rclone
 Restart=always
 RestartSec=5
