@@ -6,6 +6,8 @@ rutorrent:
 plex:
   tag: public
   transcodes: /home/{{user}}/transcodes
+emby:
+  strm: /home/{{user}}/strm
 rclone:
   version: latest
   cache_backend: /storage/cache-backend

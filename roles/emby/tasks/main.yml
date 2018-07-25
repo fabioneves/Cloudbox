@@ -53,6 +53,7 @@
       - "{{plex.transcodes}}:/transcode"
       - "/mnt/unionfs/Media:/data"
       - "/mnt:/mnt"
+      - "{{emby.strm}}:/strm"      
     devices: "{{ '/dev/dri/renderD128:/dev/dri/renderD128' if dev_dri.stat.exists == True | default(false) else omit }}"
     networks:
       - name: cloudbox
